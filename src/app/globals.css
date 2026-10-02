@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f4f6fb;
+}
+
+html, body {
+  background: var(--bg);
+  color: #1e293b;
+}
+
+/* Checkbox & radio bertema brand */
+input[type="checkbox"], input[type="radio"] {
+  accent-color: #5B5FEF;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+/* Scrollbar halus */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-slate-100;
+  }
+  .input {
+    @apply w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white
+           outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition;
+    color: #1e293b;
+  }
+  /* Dropdown bertema: hilangkan panah default, pakai chevron brand. */
+  select.input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235B5FEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+    cursor: pointer;
+  }
+  select.input:hover { border-color: #c7d2fe; }
+  /* Input tanggal/jam: ikon kalender/jam diberi warna brand. */
+  input[type="date"].input,
+  input[type="time"].input,
+  input[type="datetime-local"].input,
+  input[type="month"].input { cursor: pointer; }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    filter: invert(38%) sepia(92%) saturate(1800%) hue-rotate(226deg) brightness(95%);
+  }
+  .btn-brand {
+    @apply inline-flex items-center justify-center gap-2 bg-brand text-white
+           rounded-xl px-4 py-2.5 text-sm font-semibold
+           hover:bg-brand-dark active:scale-[0.98] transition shadow-sm;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700
+           rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-slate-200 transition;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
