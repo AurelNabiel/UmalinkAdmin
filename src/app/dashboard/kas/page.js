@@ -7,7 +7,7 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import { Spinner, ErrorBox } from '@/components/ui';
 import { Icon } from '@/components/Icons';
-import { DIVISIONS, fmtIDR, fmtDate } from '@/lib/constants';
+import { DIVISIONS, fmtIDR, fmtDate, divisionLabel } from '@/lib/constants';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
@@ -39,7 +39,6 @@ export default function KasPage() {
     ['iuran', 'Iuran', 'wallet'],
     ['transaksi', 'Transaksi', 'swap'],
     ['laporan', 'Laporan', 'upload'],
-    ['audit', 'Audit', 'clock'],
     ['pengaturan', 'Pengaturan', 'check'],
   ];
 
@@ -78,7 +77,6 @@ export default function KasPage() {
       {tab === 'iuran' && <IuranTab onChanged={loadAll} />}
       {tab === 'transaksi' && <TransaksiTab tx={tx} onChanged={loadAll} />}
       {tab === 'laporan' && <LaporanTab tx={tx} />}
-      {tab === 'audit' && <AuditTab />}
       {tab === 'pengaturan' && <PengaturanTab />}
     </div>
   );
@@ -164,7 +162,7 @@ function RingkasanTab({ ov, tx, periods, onGo }) {
             <QuickBtn label="Catat uang" onClick={() => onGo('transaksi')} color="#5B5FEF" />
             <QuickBtn label="Tagih iuran" onClick={() => onGo('iuran')} color="#22C55E" />
             <QuickBtn label="Laporan" onClick={() => onGo('laporan')} color="#F59E0B" />
-            <QuickBtn label="Audit log" onClick={() => onGo('audit')} color="#EC4899" />
+            <QuickBtn label="Pengaturan" onClick={() => onGo('pengaturan')} color="#EC4899" />
           </div>
         </div>
       </div>
@@ -273,23 +271,23 @@ function IuranTab({ onChanged }) {
 
       <div className="lg:col-span-2">
         <div className="card p-5">
-          <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <h3 className="font-semibold">Tagihan {sel ? '' : '— pilih periode'}</h3>
             {sel && <input className="input max-w-[200px]" placeholder="Cari anggota…" value={q} onChange={(e) => setQ(e.target.value)} />}
           </div>
           {!sel ? (
             <p className="text-sm text-slate-400">Pilih periode untuk menandai pembayaran.</p>
           ) : !bills ? <Spinner /> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="text-left text-slate-400 border-b border-slate-100">
-                  <th className="py-2 pr-3">Anggota</th><th className="py-2 pr-3">Nominal</th><th className="py-2 pr-3">Status</th><th></th>
-                </tr></thead>
-                <tbody>
-                  {shown.map((b) => <BillRow key={b.id} b={b} onDone={() => { loadBills(sel); loadPeriods(); onChanged(); }} />)}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="flex gap-2 flex-wrap mb-4 text-xs">
+                <span className="badge bg-green-100 text-green-700">Lunas {bills.filter((b) => b.status === 'lunas').length}</span>
+                <span className="badge bg-amber-100 text-amber-700">Belum {bills.filter((b) => b.status === 'belum').length}</span>
+                <span className="badge bg-slate-100 text-slate-500">Bebas {bills.filter((b) => b.status === 'bebas').length}</span>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {shown.map((b) => <BillCard key={b.id} b={b} onDone={() => { loadBills(sel); loadPeriods(); onChanged(); }} />)}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -297,7 +295,13 @@ function IuranTab({ onChanged }) {
   );
 }
 
-function BillRow({ b, onDone }) {
+const BILL_STATUS = {
+  lunas: { label: 'Lunas', color: '#22C55E', bg: '#E8F8EF' },
+  belum: { label: 'Belum', color: '#F59E0B', bg: '#FFF7E6' },
+  bebas: { label: 'Bebas', color: '#64748B', bg: '#F1F5F9' },
+};
+
+function BillCard({ b, onDone }) {
   const [amount, setAmount] = useState(b.amount);
   const [busy, setBusy] = useState(false);
   async function set(status) {
@@ -309,23 +313,42 @@ function BillRow({ b, onDone }) {
     if (error) { alert('Gagal: ' + error.message); return; }
     onDone();
   }
-  const badge = { belum: 'bg-amber-100 text-amber-700', lunas: 'bg-green-100 text-green-700', bebas: 'bg-slate-100 text-slate-500' }[b.status];
+  const st = BILL_STATUS[b.status] || BILL_STATUS.belum;
+  const initial = (b.full_name || '?').trim().charAt(0).toUpperCase();
+
   return (
-    <tr className="border-b border-slate-50">
-      <td className="py-2 pr-3">
-        <div className="font-medium">{b.full_name || '-'}</div>
-        <div className="text-xs text-slate-400">{b.nim || ''}{b.division ? ` · ${b.division}` : ''}</div>
-      </td>
-      <td className="py-2 pr-3"><input type="number" min="0" className="input w-24 py-1" value={amount} onChange={(e) => setAmount(e.target.value)} /></td>
-      <td className="py-2 pr-3"><span className={`badge ${badge}`}>{b.status}</span></td>
-      <td className="py-2">
-        <div className="flex gap-1.5">
-          <button disabled={busy} onClick={() => set('lunas')} className="text-xs font-semibold text-green-700 hover:underline">Lunas</button>
-          <button disabled={busy} onClick={() => set('belum')} className="text-xs font-semibold text-amber-600 hover:underline">Belum</button>
-          <button disabled={busy} onClick={() => set('bebas')} className="text-xs font-semibold text-slate-500 hover:underline">Bebas</button>
+    <div className="rounded-2xl border border-slate-100 p-4" style={{ background: st.bg + '80' }}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full grid place-items-center text-white font-bold shrink-0"
+             style={{ background: 'linear-gradient(135deg,#5B5FEF,#22D3EE)' }}>{initial}</div>
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-sm truncate">{b.full_name || '-'}</div>
+          <div className="text-xs text-slate-400 truncate">{b.nim || '—'}{b.division ? ` · ${divisionLabel(b.division)}` : ''}</div>
         </div>
-      </td>
-    </tr>
+        <span className="badge shrink-0" style={{ background: '#fff', color: st.color }}>{st.label}</span>
+      </div>
+
+      <div className="flex items-center gap-2 mt-3">
+        <span className="text-xs text-slate-400">Rp</span>
+        <input type="number" min="0" className="input py-1.5 flex-1" value={amount} onChange={(e) => setAmount(e.target.value)} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-1.5 mt-3">
+        {['lunas', 'belum', 'bebas'].map((s) => {
+          const active = b.status === s;
+          const c = BILL_STATUS[s];
+          return (
+            <button key={s} disabled={busy} onClick={() => set(s)}
+              className="py-1.5 rounded-xl text-xs font-semibold capitalize transition border"
+              style={active
+                ? { background: c.color, color: '#fff', borderColor: c.color }
+                : { background: '#fff', color: c.color, borderColor: '#e2e8f0' }}>
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -502,35 +525,6 @@ function RepCard({ label, value, color }) {
     <div className="card p-4 border-l-4" style={{ borderLeftColor: color }}>
       <div className="text-xs text-slate-400">{label}</div>
       <div className="text-lg font-extrabold mt-0.5" style={{ color }}>{value}</div>
-    </div>
-  );
-}
-
-/* ====================== AUDIT ====================== */
-function AuditTab() {
-  const [rows, setRows] = useState(null);
-  useEffect(() => {
-    supabase.rpc('cash_audit_log', { p_limit: 200 }).then(({ data }) => setRows(data || []));
-  }, []);
-  if (!rows) return <Spinner />;
-  return (
-    <div className="card p-5">
-      <h3 className="font-semibold mb-4">Audit Log</h3>
-      {rows.length === 0 ? <p className="text-sm text-slate-400">Belum ada aktivitas.</p> : (
-        <div className="relative pl-5">
-          <div className="absolute left-1.5 top-1 bottom-1 w-px bg-slate-200" />
-          {rows.map((r) => (
-            <div key={r.id} className="relative mb-4">
-              <div className="absolute -left-[13px] top-1 w-2.5 h-2.5 rounded-full bg-brand border-2 border-white" />
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="text-sm font-medium">{r.action}{r.detail ? <span className="text-slate-400 font-normal"> · {r.detail}</span> : ''}</div>
-                {r.amount != null && <div className="text-sm font-semibold text-brand">{fmtIDR(r.amount)}</div>}
-              </div>
-              <div className="text-xs text-slate-400">{r.actor_name || 'Sistem'} · {fmtDate(r.created_at)}</div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
