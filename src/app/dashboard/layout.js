@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabaseClient';
 import Sidebar from '@/components/Sidebar';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const TITLES = {
   '/dashboard': 'Ringkasan',
@@ -13,6 +15,7 @@ const TITLES = {
   '/dashboard/tugas': 'Kelola Tugas',
   '/dashboard/merch': 'Kelola Merch',
   '/dashboard/penukaran': 'Penukaran Poin',
+  '/dashboard/poin': 'Poin & Sertifikat',
   '/dashboard/kas': 'Uang Kas',
   '/dashboard/audit': 'Audit Log',
 };
@@ -23,6 +26,8 @@ export default function DashboardLayout({ children }) {
   const [me, setMe] = useState(null);
   const [checking, setChecking] = useState(true);
   const [open, setOpen] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const prevPath = useRef(path);
 
   useEffect(() => {
     let active = true;
@@ -49,17 +54,31 @@ export default function DashboardLayout({ children }) {
     return () => { active = false; };
   }, [router]);
 
+  // Overlay transisi singkat tiap pindah halaman.
+  useEffect(() => {
+    if (checking) return;
+    if (prevPath.current !== path) {
+      prevPath.current = path;
+      setRouteLoading(true);
+      const t = setTimeout(() => setRouteLoading(false), 650);
+      return () => clearTimeout(t);
+    }
+  }, [path, checking]);
+
   async function logout() {
     await supabase.auth.signOut();
     router.replace('/login');
   }
 
   if (checking) {
-    return <div className="min-h-screen grid place-items-center text-slate-400">Memeriksa sesi…</div>;
+    return <LoadingScreen tagline="Menyiapkan panel pengurus…" />;
   }
 
   return (
     <div className="flex min-h-screen">
+      <AnimatePresence>
+        {routeLoading && <LoadingScreen key="route-loading" />}
+      </AnimatePresence>
       <Sidebar open={open} onClose={() => setOpen(false)} onLogout={logout} canAdmin={me?.canAdmin !== false} />
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-10 h-16 bg-white/80 backdrop-blur border-b border-slate-100 flex items-center justify-between px-4 md:px-6">
@@ -69,6 +88,7 @@ export default function DashboardLayout({ children }) {
               <span className="block w-5 h-0.5 bg-slate-700 mb-1" />
               <span className="block w-5 h-0.5 bg-slate-700" />
             </button>
+            <img src="/umalink-logo.png" alt="Umalink" className="md:hidden w-8 h-8 object-cover" />
             <h1 className="text-lg font-bold">{TITLES[path] || (path.startsWith('/dashboard/tugas/') ? 'Review Tugas' : 'Dashboard')}</h1>
           </div>
           <div className="flex items-center gap-3">

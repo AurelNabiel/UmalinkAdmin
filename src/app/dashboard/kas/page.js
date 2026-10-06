@@ -39,6 +39,7 @@ export default function KasPage() {
     ['iuran', 'Iuran', 'wallet'],
     ['transaksi', 'Transaksi', 'swap'],
     ['laporan', 'Laporan', 'upload'],
+    ['audit', 'Audit', 'clock'],
     ['pengaturan', 'Pengaturan', 'check'],
   ];
 
@@ -77,6 +78,7 @@ export default function KasPage() {
       {tab === 'iuran' && <IuranTab onChanged={loadAll} />}
       {tab === 'transaksi' && <TransaksiTab tx={tx} onChanged={loadAll} />}
       {tab === 'laporan' && <LaporanTab tx={tx} />}
+      {tab === 'audit' && <AuditTab />}
       {tab === 'pengaturan' && <PengaturanTab />}
     </div>
   );
@@ -272,7 +274,7 @@ function IuranTab({ onChanged }) {
       <div className="lg:col-span-2">
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-            <h3 className="font-semibold">Tagihan {sel ? '' : '— pilih periode'}</h3>
+            <h3 className="font-semibold">Tagihan {sel ? '' : 'pilih periode'}</h3>
             {sel && <input className="input max-w-[200px]" placeholder="Cari anggota…" value={q} onChange={(e) => setQ(e.target.value)} />}
           </div>
           {!sel ? (
@@ -464,7 +466,7 @@ function LaporanTab({ tx }) {
         td{border-bottom:1px solid #eee;padding:6px 7px}
         .foot{margin-top:18px;color:#94a3b8;font-size:10px}
       </style></head><body>
-      <h1>Laporan Kas — Umalink</h1>
+      <h1>Laporan Kas - UMADO</h1>
       <div class="sub">Periode: ${label}</div>
       <div class="cards">
         <div class="c"><div class="l">Saldo Awal</div><div class="v">${fmtIDR(rep?.saldo_awal)}</div></div>
@@ -529,19 +531,73 @@ function RepCard({ label, value, color }) {
   );
 }
 
+/* ====================== AUDIT ====================== */
+function AuditTab() {
+  const [rows, setRows] = useState(null);
+  const [err, setErr] = useState('');
+  const [q, setQ] = useState('');
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.rpc('admin_audit_log', {
+      p_area: 'keuangan', p_search: q || null, p_limit: 300,
+    });
+    if (error) { setErr(error.message); return; }
+    setErr(''); setRows(data || []);
+  }, [q]);
+  useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [q, load]);
+
+  if (err) return <ErrorBox>{err}</ErrorBox>;
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+        <div>
+          <h3 className="font-semibold">Audit Keuangan</h3>
+          <p className="text-xs text-slate-400">Semua perubahan iuran, transaksi & pengaturan kas.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {rows && <span className="text-sm text-slate-400">{rows.length} catatan</span>}
+          <input className="input max-w-[200px]" placeholder="Cari aksi / nama…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+      </div>
+      {!rows ? <Spinner /> : rows.length === 0 ? (
+        <p className="text-sm text-slate-400">Belum ada aktivitas keuangan.</p>
+      ) : (
+        <div className="relative pl-5">
+          <div className="absolute left-1.5 top-1 bottom-1 w-px bg-slate-200" />
+          {rows.map((r) => (
+            <div key={r.id} className="relative mb-4">
+              <div className="absolute -left-[13px] top-1 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="text-sm">
+                  <span className="font-medium">{r.action}</span>
+                  {r.detail && <span className="text-slate-400"> · {r.detail}</span>}
+                </div>
+                {r.amount != null && <div className="text-sm font-semibold text-green-700">{fmtIDR(r.amount)}</div>}
+              </div>
+              <div className="text-xs text-slate-400 mt-0.5">{r.actor_name || 'Sistem'} · {fmtDate(r.created_at)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ====================== PENGATURAN ====================== */
 function PengaturanTab() {
   const [def, setDef] = useState(5000);
+  const [targetDues, setTargetDues] = useState(0);
   const [disabled, setDisabled] = useState([]);
   const [saved, setSaved] = useState(false);
   const [members, setMembers] = useState(null);
   useEffect(() => {
-    supabase.rpc('cash_get_settings').then(({ data }) => { if (data && data[0]) { setDef(data[0].default_dues); setDisabled(data[0].disabled_divisions || []); } });
+    supabase.rpc('cash_get_settings').then(({ data }) => { if (data && data[0]) { setDef(data[0].default_dues); setDisabled(data[0].disabled_divisions || []); setTargetDues(data[0].dues_target || 0); } });
     supabase.from('profiles').select('id, full_name, is_treasurer').order('full_name').then(({ data }) => setMembers(data || []));
   }, []);
   function toggleDiv(v) { setDisabled((d) => (d.includes(v) ? d.filter((x) => x !== v) : [...d, v])); }
   async function save() {
-    const { error } = await supabase.rpc('cash_set_settings', { p_default_dues: parseInt(def, 10) || 0, p_disabled_divisions: disabled });
+    const { error } = await supabase.rpc('cash_set_settings', { p_default_dues: parseInt(def, 10) || 0, p_disabled_divisions: disabled, p_dues_target: parseInt(targetDues, 10) || 0 });
     if (error) { alert('Gagal: ' + error.message); return; }
     setSaved(true); setTimeout(() => setSaved(false), 1500);
   }
@@ -554,6 +610,9 @@ function PengaturanTab() {
     <div className="grid lg:grid-cols-2 gap-6">
       <div className="card p-5">
         <h3 className="font-semibold mb-4">Pengaturan Iuran</h3>
+        <label className="text-sm font-medium">Target kas per anggota (Rp)</label>
+        <input type="number" min="0" className="input mt-1 mb-1" value={targetDues} onChange={(e) => setTargetDues(e.target.value)} />
+        <p className="text-xs text-slate-400 mb-4">Anggota yang total pembayarannya sudah mencapai target tidak akan ditagih lagi. (0 = tanpa batas)</p>
         <label className="text-sm font-medium">Iuran default per periode (Rp)</label>
         <input type="number" min="0" className="input mt-1 mb-4" value={def} onChange={(e) => setDef(e.target.value)} />
         <label className="text-sm font-medium">Nonaktifkan iuran untuk divisi</label>

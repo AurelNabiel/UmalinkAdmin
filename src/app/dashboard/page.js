@@ -88,12 +88,16 @@ export default function RingkasanPage() {
           </span>
         </div>
 
-        <div className="flex items-center gap-6 flex-wrap">
-          <Stat value={stats.live} label="Berlangsung" />
-          <Dot /><Stat value={stats.up} label="Mendatang" />
-          <Dot /><Stat value={stats.total} label="Total" />
-          <Dot /><Stat value={totalMembers} label="Anggota" />
-          <div className="ml-auto flex rounded-xl border border-slate-200 overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard icon="calendar" value={stats.live} label="Berlangsung" color="#22C55E" />
+          <StatCard icon="clock" value={stats.up} label="Mendatang" color="#5B5FEF" />
+          <StatCard icon="grid" value={stats.total} label="Total Kegiatan" color="#F59E0B" />
+          <StatCard icon="users" value={totalMembers} label="Anggota" color="#EC4899" />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-slate-500">Daftar Kegiatan</span>
+          <div className="flex rounded-xl border border-slate-200 overflow-hidden">
             <button onClick={() => setView('list')} className={`px-2.5 py-2 ${view === 'list' ? 'bg-brand text-white' : 'bg-white text-slate-500'}`}><Icon.list width={16} height={16} /></button>
             <button onClick={() => setView('grid')} className={`px-2.5 py-2 ${view === 'grid' ? 'bg-brand text-white' : 'bg-white text-slate-500'}`}><Icon.grid width={16} height={16} /></button>
           </div>
@@ -193,10 +197,20 @@ export default function RingkasanPage() {
   );
 }
 
-function Stat({ value, label }) {
-  return <div><div className="text-2xl font-extrabold leading-none">{value}</div><div className="text-xs text-slate-400 mt-1">{label}</div></div>;
+function StatCard({ icon, value, label, color }) {
+  const I = Icon[icon];
+  return (
+    <div className="card p-4 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl grid place-items-center shrink-0" style={{ background: color + '1a', color }}>
+        {I && <I width={18} height={18} />}
+      </div>
+      <div className="min-w-0">
+        <div className="text-2xl font-extrabold leading-none">{value}</div>
+        <div className="text-xs text-slate-400 mt-1 truncate">{label}</div>
+      </div>
+    </div>
+  );
 }
-function Dot() { return <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />; }
 
 function MiniCard({ a, i, onClick }) {
   const t = timeInfo(a);

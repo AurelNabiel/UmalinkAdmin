@@ -7,7 +7,6 @@ import { fmtDate } from '@/lib/constants';
 
 const AREAS = [
   ['', 'Semua', '#5B5FEF'],
-  ['keuangan', 'Keuangan', '#22C55E'],
   ['anggota', 'Anggota', '#3B82F6'],
   ['kegiatan', 'Kegiatan', '#22D3EE'],
   ['tugas', 'Tugas', '#F59E0B'],
@@ -28,6 +27,7 @@ export default function AuditPage() {
     setRows(null);
     const { data, error } = await supabase.rpc('admin_audit_log', {
       p_area: area || null, p_search: q || null, p_limit: 300,
+      p_exclude: area ? null : 'keuangan', // audit kas punya halaman sendiri
     });
     if (error) { setErr(error.message); return; }
     setErr(''); setRows(data || []);
