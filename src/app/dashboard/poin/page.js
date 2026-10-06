@@ -800,8 +800,8 @@ const KIND_LABEL = {
   sertifikat: "Sertifikat",
 };
 const SAMPLE_CLAIM = (kind) => ({
-  full_name: "Aurelio Nabiel Rizqullah",
-  nim: "2023110097",
+  full_name: "Nama Anda",
+  nim: "123456789",
   division: "",
   points_at_claim: 120,
   kind,
