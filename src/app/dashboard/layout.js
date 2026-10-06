@@ -88,7 +88,7 @@ export default function DashboardLayout({ children }) {
               <span className="block w-5 h-0.5 bg-slate-700 mb-1" />
               <span className="block w-5 h-0.5 bg-slate-700" />
             </button>
-            <img src="/umalink-logo.png" alt="Umalink" className="md:hidden w-8 h-8 object-cover" />
+            <img src="/umalink-logo.png" alt="Umalink" className="md:hidden w-8 h-8 rounded-lg object-cover" />
             <h1 className="text-lg font-bold">{TITLES[path] || (path.startsWith('/dashboard/tugas/') ? 'Review Tugas' : 'Dashboard')}</h1>
           </div>
           <div className="flex items-center gap-3">

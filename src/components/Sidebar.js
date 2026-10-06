@@ -34,7 +34,7 @@ export default function Sidebar({ open, onClose, onLogout, canAdmin = true }) {
                     ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
-          <img src="/umalink-logo.png" alt="Umalink" className="w-9 h-9 object-cover" />
+          <img src="/umalink-logo.png" alt="Umalink" className="w-9 h-9 rounded-xl object-cover" />
           <div className="leading-tight">
             <div className="font-bold">Umalink</div>
             <div className="text-[11px] text-slate-400">Panel Pengurus</div>

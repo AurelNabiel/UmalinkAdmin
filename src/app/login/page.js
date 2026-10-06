@@ -56,7 +56,7 @@ export default function LoginPage() {
         <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10" />
         <div className="absolute bottom-10 -left-16 w-72 h-72 rounded-full bg-white/10" />
         <div className="flex items-center gap-3 relative">
-          <img src="/umalink-logo.png" alt="Umalink" className="w-11 h-11  object-cover shadow-lg" />
+          <img src="/umalink-logo.png" alt="Umalink" className="w-11 h-11 rounded-2xl object-cover shadow-lg" />
           <span className="text-xl font-bold">Umalink</span>
         </div>
         <div className="relative">
@@ -70,7 +70,7 @@ export default function LoginPage() {
       <div className="grid place-items-center p-6">
         <form onSubmit={doLogin} className="w-full max-w-sm card p-7 animate-fade-up">
           <div className="lg:hidden flex items-center gap-2 mb-6">
-            <img src="/umalink-logo.png" alt="Umalink" className="w-9 h-9 S object-cover" />
+            <img src="/umalink-logo.png" alt="Umalink" className="w-9 h-9 rounded-xl object-cover" />
             <span className="font-bold">Umalink</span>
           </div>
           <h2 className="text-xl font-bold mb-1">Masuk</h2>

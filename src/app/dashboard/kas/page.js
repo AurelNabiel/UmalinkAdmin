@@ -274,7 +274,7 @@ function IuranTab({ onChanged }) {
       <div className="lg:col-span-2">
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-            <h3 className="font-semibold">Tagihan {sel ? '' : 'pilih periode'}</h3>
+            <h3 className="font-semibold">Tagihan {sel ? '' : '- pilih periode'}</h3>
             {sel && <input className="input max-w-[200px]" placeholder="Cari anggota…" value={q} onChange={(e) => setQ(e.target.value)} />}
           </div>
           {!sel ? (
@@ -466,7 +466,7 @@ function LaporanTab({ tx }) {
         td{border-bottom:1px solid #eee;padding:6px 7px}
         .foot{margin-top:18px;color:#94a3b8;font-size:10px}
       </style></head><body>
-      <h1>Laporan Kas - UMADO</h1>
+      <h1>Laporan Kas UMADO</h1>
       <div class="sub">Periode: ${label}</div>
       <div class="cards">
         <div class="c"><div class="l">Saldo Awal</div><div class="v">${fmtIDR(rep?.saldo_awal)}</div></div>
@@ -501,7 +501,7 @@ function LaporanTab({ tx }) {
       </div>
 
       <div className="card p-5 overflow-x-auto">
-        <h3 className="font-semibold mb-3">Rincian — {label}</h3>
+        <h3 className="font-semibold mb-3">Rincian {label}</h3>
         {rows.length === 0 ? <p className="text-sm text-slate-400">Tidak ada transaksi di bulan ini.</p> : (
           <table className="w-full text-sm">
             <thead><tr className="text-left text-slate-400 border-b border-slate-100">
