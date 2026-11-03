@@ -3,13 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f4f6fb;
+  --bg: #f3f5fb;
 }
 
 html, body {
-  background: var(--bg);
+  background:
+    radial-gradient(1100px 560px at 100% -8%, rgba(91, 95, 239, 0.07), transparent 60%),
+    radial-gradient(900px 480px at -8% 108%, rgba(34, 211, 238, 0.07), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
   color: #1e293b;
+  -webkit-font-smoothing: antialiased;
 }
+
+::selection { background: rgba(91, 95, 239, 0.18); }
 
 /* Checkbox & radio bertema brand */
 input[type="checkbox"], input[type="radio"] {
@@ -20,13 +27,30 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 /* Scrollbar halus */
-::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+/* Skeleton loader (pengganti spinner — tampak modern) */
+.skeleton { position: relative; overflow: hidden; background: #e7ebf3; border-radius: 12px; }
+.skeleton::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
 @layer components {
   .card {
-    @apply bg-white rounded-2xl shadow-soft border border-slate-100;
+    @apply bg-white rounded-2xl border border-slate-200/70;
+    box-shadow: 0 1px 2px rgba(2, 6, 23, 0.04), 0 10px 30px -18px rgba(2, 6, 23, 0.18);
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  /* Kartu yang bisa diklik: beri efek angkat halus */
+  .card-hover:hover {
+    box-shadow: 0 8px 28px -14px rgba(91, 95, 239, 0.4);
+    transform: translateY(-2px);
+    border-color: rgba(91, 95, 239, 0.25);
   }
   .input {
     @apply w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white
@@ -59,10 +83,13 @@ input[type="checkbox"], input[type="radio"] {
     filter: invert(38%) sepia(92%) saturate(1800%) hue-rotate(226deg) brightness(95%);
   }
   .btn-brand {
-    @apply inline-flex items-center justify-center gap-2 bg-brand text-white
-           rounded-xl px-4 py-2.5 text-sm font-semibold
-           hover:bg-brand-dark active:scale-[0.98] transition shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 text-white
+           rounded-xl px-4 py-2.5 text-sm font-semibold active:scale-[0.98] transition;
+    background-image: linear-gradient(135deg, #5B5FEF, #4A4FE6);
+    box-shadow: 0 10px 22px -10px rgba(91, 95, 239, 0.65);
   }
+  .btn-brand:hover { background-image: linear-gradient(135deg, #4A4FE6, #3F43D6); }
+  .btn-brand:disabled { opacity: 0.6; box-shadow: none; cursor: default; }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700
            rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-slate-200 transition;

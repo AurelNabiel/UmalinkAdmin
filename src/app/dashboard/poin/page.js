@@ -147,7 +147,7 @@ function PoinAnggota({ members, target }) {
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: reached ? '#22C55E' : '#5B5FEF' }} />
                 </div>
               )}
-              {reached && <div className="text-xs text-green-600 mt-1">Anda telah Memenuhi target silahkan klaim sertifikat</div>}
+              {reached && <div className="text-xs text-green-600 mt-1">✓ Memenuhi target — bisa klaim sertifikat</div>}
             </div>
           );
         })}

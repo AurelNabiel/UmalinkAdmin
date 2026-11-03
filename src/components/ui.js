@@ -1,10 +1,21 @@
 'use client';
 
-export function Spinner({ label = 'Memuat…' }) {
+// Blok skeleton tunggal.
+export function Skeleton({ className = '' }) {
+  return <div className={`skeleton ${className}`} />;
+}
+
+// Placeholder konten saat memuat — skeleton halus (bukan spinner penuh layar).
+export function Spinner() {
   return (
-    <div className="flex items-center gap-3 text-slate-400 py-10 justify-center">
-      <span className="w-5 h-5 rounded-full border-2 border-slate-300 border-t-brand animate-spin" />
-      {label}
+    <div className="space-y-4 animate-fade-up">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <Skeleton className="h-20 rounded-2xl" />
+        <Skeleton className="h-20 rounded-2xl" />
+        <Skeleton className="h-20 rounded-2xl" />
+      </div>
+      <Skeleton className="h-5 w-40 rounded" />
+      <Skeleton className="h-56 rounded-2xl" />
     </div>
   );
 }

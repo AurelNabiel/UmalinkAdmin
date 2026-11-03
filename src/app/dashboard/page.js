@@ -10,6 +10,23 @@ import ActivityQrModal from '@/components/ActivityQrModal';
 import RosterModal from '@/components/RosterModal';
 import ActivityDetailModal from '@/components/ActivityDetailModal';
 import CalendarMini, { dateKey } from '@/components/CalendarMini';
+import MemberRingkasan from '@/components/MemberRingkasan';
+
+export default function RingkasanPage() {
+  const [role, setRole] = useState(undefined);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id;
+      if (!uid) { setRole('anggota'); return; }
+      const { data: p } = await supabase.from('profiles').select('role').eq('id', uid).maybeSingle();
+      setRole(p?.role || 'anggota');
+    })();
+  }, []);
+  if (role === undefined) return <Spinner />;
+  if (role === 'admin' || role === 'superadmin') return <AdminRingkasan />;
+  return <MemberRingkasan />;
+}
 
 const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const PAL = ['#5B5FEF', '#F97316', '#22C55E', '#EC4899', '#8B5CF6', '#EAB308'];
@@ -23,7 +40,7 @@ function timeInfo(a) {
 }
 const PRIOC = { low: '#22C55E', medium: '#F59E0B', high: '#EF4444' };
 
-export default function RingkasanPage() {
+function AdminRingkasan() {
   const [acts, setActs] = useState(null);
   const [hadir, setHadir] = useState({});
   const [totalMembers, setTotalMembers] = useState(0);

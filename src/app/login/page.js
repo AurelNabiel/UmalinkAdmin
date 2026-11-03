@@ -33,11 +33,10 @@ export default function LoginPage() {
     });
     if (error) { setErr(error.message); setBusy(false); return; }
     const { data: prof } = await supabase
-      .from('profiles').select('role, is_treasurer').eq('id', data.user.id).maybeSingle();
-    const allowed = prof && (['admin', 'superadmin'].includes(prof.role) || prof.is_treasurer === true);
-    if (!allowed) {
+      .from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+    if (!prof) {
       await supabase.auth.signOut();
-      setErr('Akun ini tidak punya akses dashboard (admin/bendahara).');
+      setErr('Akun tidak ditemukan.');
       setBusy(false);
       return;
     }
@@ -74,7 +73,7 @@ export default function LoginPage() {
             <span className="font-bold">Umalink</span>
           </div>
           <h2 className="text-xl font-bold mb-1">Masuk</h2>
-          <p className="text-sm text-slate-500 mb-5">Khusus akun admin / superadmin.</p>
+          <p className="text-sm text-slate-500 mb-5">Gunakan akun Umalink kamu.</p>
 
           <label className="block text-sm font-medium mb-1">Email</label>
           <input className="input mb-3" type="email" value={email}

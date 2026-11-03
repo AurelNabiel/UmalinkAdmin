@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase, SUPABASE_URL } from '@/lib/supabaseClient';
 import { ROLES, DIVISIONS } from '@/lib/constants';
+import { Icon } from '@/components/Icons';
 import Select from '@/components/Select';
 
 function emptyRow() {
@@ -14,10 +15,11 @@ function randomPass(len = 8) {
 }
 
 export default function BulkPage() {
-  const [rows, setRows] = useState([emptyRow(), emptyRow(), emptyRow()]);
+  const [rows, setRows] = useState([emptyRow()]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [result, setResult] = useState(null);
+  const [showPw, setShowPw] = useState(true);
 
   function update(i, field, val) {
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
@@ -57,93 +59,151 @@ export default function BulkPage() {
 
   const okByEmail = {};
   (result?.results || []).forEach((r) => { okByEmail[r.email] = r; });
+  const readyCount = rows.filter((r) => r.email.trim() && r.password).length;
 
   return (
-    <div className="space-y-4 max-w-4xl">
-      <div className="card p-5">
-        <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
-          <div>
-            <h3 className="font-semibold">Daftarkan Anggota</h3>
-            <p className="text-sm text-slate-500">Isi tiap baris. Email langsung aktif, anggota bisa langsung login.</p>
+    <div className="space-y-5 max-w-4xl">
+      {/* Hero */}
+      <div className="rounded-2xl p-5 sm:p-6 text-white shadow-soft relative overflow-hidden"
+           style={{ background: 'linear-gradient(135deg,#5B5FEF,#7C4DFF,#22D3EE)' }}>
+        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/15" />
+        <div className="absolute -right-4 bottom-0 w-24 h-24 rounded-full bg-white/10" />
+        <div className="relative flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 grid place-items-center shrink-0">
+            <Icon.users width={24} height={24} />
           </div>
-          <div className="flex gap-2">
-            <button onClick={fillPasswords} className="btn-ghost py-2">Isi password acak</button>
-            <button onClick={clearAll} className="btn-ghost py-2">Kosongkan</button>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-extrabold">Daftarkan Anggota</h2>
+            <p className="text-sm text-white/85 mt-0.5">
+              Tambah beberapa anggota sekaligus. Email langsung aktif — anggota bisa login seketika.
+            </p>
           </div>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-slate-400">
-                <th className="pb-2 pr-2 font-medium w-8">#</th>
-                <th className="pb-2 pr-2 font-medium">Email</th>
-                <th className="pb-2 pr-2 font-medium">Password</th>
-                <th className="pb-2 pr-2 font-medium">Nama</th>
-                <th className="pb-2 pr-2 font-medium">Role</th>
-                <th className="pb-2 pr-2 font-medium">Divisi</th>
-                <th className="pb-2 w-8"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => {
-                const res = okByEmail[row.email.trim()];
-                return (
-                  <tr key={i} className="align-top">
-                    <td className="py-1 pr-2 text-slate-400 pt-3">{i + 1}</td>
-                    <td className="py-1 pr-2">
-                      <input className="input py-1.5" type="email" placeholder="nama@email.com"
-                             value={row.email} onChange={(e) => update(i, 'email', e.target.value)} />
-                      {res && (
-                        <span className={`text-[11px] ${res.ok ? 'text-green-600' : 'text-red-600'}`}>
-                          {res.ok ? (res.warning || '✓ dibuat') : res.error}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-1 pr-2">
-                      <div className="flex gap-1">
-                        <input className="input py-1.5" placeholder="min 6 karakter"
-                               value={row.password} onChange={(e) => update(i, 'password', e.target.value)} />
-                        <button type="button" title="Acak"
-                                onClick={() => update(i, 'password', randomPass())}
-                                className="shrink-0 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs">⟳</button>
-                      </div>
-                    </td>
-                    <td className="py-1 pr-2">
-                      <input className="input py-1.5" placeholder="Nama"
-                             value={row.full_name} onChange={(e) => update(i, 'full_name', e.target.value)} />
-                    </td>
-                    <td className="py-1 pr-2 min-w-[130px]">
-                      <Select value={row.role} onChange={(v) => update(i, 'role', v)}
-                        options={ROLES.filter((r) => r !== 'superadmin').map((r) => [r, r])} />
-                    </td>
-                    <td className="py-1 pr-2 min-w-[130px]">
-                      <Select value={row.division} onChange={(v) => update(i, 'division', v)} options={DIVISIONS} />
-                    </td>
-                    <td className="py-1 pt-2">
-                      <button onClick={() => removeRow(i)} className="text-slate-300 hover:text-red-500 text-lg leading-none">×</button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <button onClick={addRow} className="mt-3 text-sm text-brand font-semibold hover:underline">+ Tambah baris</button>
-
-        <div className="flex items-center gap-3 mt-5 pt-4 border-t border-slate-100">
-          <button onClick={submit} disabled={busy} className="btn-brand">
-            {busy ? 'Memproses…' : `Daftarkan ${rows.filter((r) => r.email.trim() && r.password).length} anggota`}
-          </button>
-          {err && <span className="text-sm text-red-600">{err}</span>}
-          {result && <span className="text-sm text-green-700 font-semibold">Berhasil {result.berhasil}/{result.total}.</span>}
+        <div className="relative flex gap-2.5 mt-4 flex-wrap">
+          <Chip>{rows.length} baris</Chip>
+          <Chip>{readyCount} siap didaftarkan</Chip>
         </div>
       </div>
 
-      <p className="text-xs text-slate-400">
-        Tips: pakai “Isi password acak” untuk mengisi semua password kosong sekaligus, lalu bagikan ke anggota.
-      </p>
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <button onClick={fillPasswords} className="btn-ghost py-2 text-sm">
+          <Icon.star width={15} height={15} /> Isi password acak
+        </button>
+        <button onClick={clearAll} className="btn-ghost py-2 text-sm">
+          <Icon.trash width={15} height={15} /> Kosongkan
+        </button>
+        <label className="ml-auto flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+          <input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />
+          Tampilkan password
+        </label>
+      </div>
+
+      {/* Ringkasan hasil */}
+      {result && (
+        <div className="card p-4 flex items-center gap-3 border-l-4" style={{ borderLeftColor: '#22C55E' }}>
+          <div className="w-9 h-9 rounded-xl grid place-items-center" style={{ background: '#DCFCE7', color: '#16A34A' }}>
+            <Icon.check width={18} height={18} />
+          </div>
+          <div className="text-sm">
+            <span className="font-semibold text-green-700">Berhasil {result.berhasil} dari {result.total}.</span>
+            {result.berhasil < result.total && <span className="text-slate-500"> Periksa baris bertanda merah di bawah.</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Kartu anggota */}
+      <div className="space-y-3">
+        {rows.map((row, i) => {
+          const res = okByEmail[row.email.trim()];
+          const initial = (row.full_name || row.email || '?').trim().charAt(0).toUpperCase();
+          return (
+            <div key={i}
+                 className={`card p-4 sm:p-5 transition ${res ? (res.ok ? 'ring-1 ring-green-200' : 'ring-1 ring-red-200') : ''}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-full grid place-items-center text-white text-sm font-bold shrink-0"
+                     style={{ background: 'linear-gradient(135deg,#5B5FEF,#22D3EE)' }}>{initial}</div>
+                {res && (
+                  <span className={`badge ${res.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {res.ok ? (res.warning || 'Dibuat') : 'Gagal'}
+                  </span>
+                )}
+                <button onClick={() => removeRow(i)}
+                        className="ml-auto w-8 h-8 rounded-lg grid place-items-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition"
+                        title="Hapus baris">
+                  <Icon.trash width={16} height={16} />
+                </button>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <Label>Email</Label>
+                  <input className="input" type="email" placeholder="nama@email.com"
+                         value={row.email} onChange={(e) => update(i, 'email', e.target.value)} />
+                  {res && !res.ok && <p className="text-xs text-red-600 mt-1">{res.error}</p>}
+                </div>
+
+                <div>
+                  <Label>Password</Label>
+                  <div className="flex gap-1.5">
+                    <input className="input" type={showPw ? 'text' : 'password'} placeholder="min. 6 karakter"
+                           value={row.password} onChange={(e) => update(i, 'password', e.target.value)} />
+                    <button type="button" title="Acak" onClick={() => update(i, 'password', randomPass())}
+                            className="shrink-0 w-10 rounded-xl bg-brand-light text-brand hover:bg-brand hover:text-white transition grid place-items-center">
+                      <Icon.swap width={16} height={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Nama Lengkap</Label>
+                  <input className="input" placeholder="Nama anggota"
+                         value={row.full_name} onChange={(e) => update(i, 'full_name', e.target.value)} />
+                </div>
+
+                <div>
+                  <Label>Role</Label>
+                  <Select value={row.role} onChange={(v) => update(i, 'role', v)}
+                          options={ROLES.filter((r) => r !== 'superadmin').map((r) => [r, r])} />
+                </div>
+
+                <div>
+                  <Label>Divisi</Label>
+                  <Select value={row.division} onChange={(v) => update(i, 'division', v)} options={DIVISIONS} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Tambah baris */}
+      <button onClick={addRow}
+              className="w-full rounded-2xl border-2 border-dashed border-slate-200 hover:border-brand/50 hover:bg-brand-light/40 transition py-4 text-sm font-semibold text-brand flex items-center justify-center gap-2">
+        <span className="text-lg leading-none">+</span> Tambah Anggota
+      </button>
+
+      {/* Action bar */}
+      <div className="card p-4 flex items-center gap-3 flex-wrap sticky bottom-4">
+        <button onClick={submit} disabled={busy || readyCount === 0} className="btn-brand">
+          {busy ? 'Memproses…' : `Daftarkan ${readyCount} anggota`}
+        </button>
+        {err && <span className="text-sm text-red-600">{err}</span>}
+        <p className="text-xs text-slate-400 ml-auto hidden sm:block">
+          Tips: “Isi password acak” mengisi semua password kosong sekaligus.
+        </p>
+      </div>
     </div>
   );
+}
+
+function Chip({ children }) {
+  return (
+    <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold">
+      {children}
+    </span>
+  );
+}
+function Label({ children }) {
+  return <label className="block text-xs font-medium text-slate-500 mb-1">{children}</label>;
 }
