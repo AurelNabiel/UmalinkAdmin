@@ -113,7 +113,7 @@ function AddCard({ nextOrder, onDone }) {
           )}
           <input className="input" placeholder={type === 'text' ? 'Judul (wajib)' : 'Judul (opsional)'} value={title} onChange={(e) => setTitle(e.target.value)} />
           <input className="input" placeholder="Subjudul (opsional)" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-          <input className="input" placeholder="Link berita (https://…) — opsional" value={link} onChange={(e) => setLink(e.target.value)} />
+          <input className="input" placeholder="Link berita (https://…) - opsional" value={link} onChange={(e) => setLink(e.target.value)} />
           <button onClick={add} disabled={busy} className="btn-brand w-full">{busy ? 'Menyimpan…' : 'Tambah Slide'}</button>
           {msg && <p className={`text-sm ${msg[0] === 'ok' ? 'text-green-700' : 'text-red-600'}`}>{msg[1]}</p>}
         </div>

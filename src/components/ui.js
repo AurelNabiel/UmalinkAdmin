@@ -5,7 +5,7 @@ export function Skeleton({ className = '' }) {
   return <div className={`skeleton ${className}`} />;
 }
 
-// Placeholder konten saat memuat — skeleton halus (bukan spinner penuh layar).
+// Placeholder konten saat memuat - skeleton halus (bukan spinner penuh layar).
 export function Spinner() {
   return (
     <div className="space-y-4 animate-fade-up">

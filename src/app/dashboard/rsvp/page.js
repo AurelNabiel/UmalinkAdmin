@@ -16,7 +16,7 @@ export default function RsvpPage() {
   return (
     <div className="space-y-5">
       <p className="text-sm text-slate-500">
-        Ringkasan konfirmasi kehadiran (RSVP) anggota untuk kegiatan mendatang — untuk estimasi jumlah hadir.
+        Ringkasan konfirmasi kehadiran (RSVP) anggota untuk kegiatan mendatang - untuk estimasi jumlah hadir.
       </p>
       <AsyncBlock state={acts} skeleton={<ListSkeleton rows={4} />}>
         {(rows) =>

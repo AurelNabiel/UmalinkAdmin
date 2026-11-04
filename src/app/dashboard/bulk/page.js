@@ -75,7 +75,7 @@ export default function BulkPage() {
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-extrabold">Daftarkan Anggota</h2>
             <p className="text-sm text-white/85 mt-0.5">
-              Tambah beberapa anggota sekaligus. Email langsung aktif — anggota bisa login seketika.
+              Tambah beberapa anggota sekaligus. Email langsung aktif - anggota bisa login seketika.
             </p>
           </div>
         </div>

@@ -20,7 +20,7 @@ export default function KomentarPage() {
         <AsyncBlock state={acts} skeleton={<div className="skeleton h-10 rounded-xl mt-2" />}>
           {(rows) => (
             <select className="input mt-2" value={actId} onChange={(e) => setActId(e.target.value)}>
-              <option value="">— pilih kegiatan —</option>
+              <option value="">- pilih kegiatan -</option>
               {rows.map((a) => <option key={a.id} value={a.id}>{a.title} · {fmtDate(a.start_time)}</option>)}
             </select>
           )}

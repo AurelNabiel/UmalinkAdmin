@@ -70,7 +70,7 @@ export default function MemberRingkasan() {
               <div className="h-2 rounded-full bg-white/25 overflow-hidden">
                 <div className="h-full rounded-full bg-white" style={{ width: `${duesPct}%` }} />
               </div>
-              {summary.reached && <div className="text-xs mt-1.5">✓ Target tercapai — kamu tidak ditagih lagi.</div>}
+              {summary.reached && <div className="text-xs mt-1.5">✓ Target tercapai - kamu tidak ditagih lagi.</div>}
             </div>
           )}
         </div>

@@ -107,7 +107,7 @@ function TaskCard({ task, uid, onDone }) {
           {open && (
             <div className="mt-3 space-y-2 pt-3 border-t border-slate-100">
               <textarea className="input text-sm" rows={2} placeholder="Catatan (opsional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-              <input className="input text-sm" placeholder="Link lampiran (Drive, dsb.) — opsional" value={link} onChange={(e) => setLink(e.target.value)} />
+              <input className="input text-sm" placeholder="Link lampiran (Drive, dsb.) - opsional" value={link} onChange={(e) => setLink(e.target.value)} />
               <div className="flex items-center gap-2">
                 <button onClick={submit} disabled={busy} className="btn-brand py-1.5 text-xs">{busy ? 'Mengirim…' : 'Kirim'}</button>
                 <button onClick={() => setOpen(false)} className="btn-ghost py-1.5 text-xs">Batal</button>

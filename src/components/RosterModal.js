@@ -43,7 +43,7 @@ export default function RosterModal({ activityId, title, onClose }) {
         <div className="p-5 border-b border-slate-100">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-bold text-lg">Absensi — {title}</h3>
+              <h3 className="font-bold text-lg">Absensi - {title}</h3>
               <div className="flex gap-2 mt-2 flex-wrap text-xs">
                 {['hadir', 'izin', 'sakit', 'alpha'].map((s) => (
                   <span key={s} className="badge" style={{ background: SC[s] + '1a', color: SC[s] }}>{s} {counts[s]}</span>

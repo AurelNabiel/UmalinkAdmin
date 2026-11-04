@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Spinner, ErrorBox, Skeleton } from '@/components/ui';
 
 /**
- * Hook pemuatan data per-bagian. Tiap blok memuat sendiri — halaman (shell,
+ * Hook pemuatan data per-bagian. Tiap blok memuat sendiri - halaman (shell,
  * header, form) tampil instan, hanya bagian data yang menampilkan skeleton.
  *
  *   const s = useAsync(() => supabase.rpc('x'), [deps]);

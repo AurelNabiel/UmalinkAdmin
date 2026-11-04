@@ -64,7 +64,7 @@ export default function KeaktifanPage() {
                 <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
               </div>
               <div className="text-xs mt-1.5 text-white/85">
-                {ach.reached ? '✓ Target tercapai — kamu bisa mengajukan surat & sertifikat.' : `${ach.target - ach.earned} poin lagi menuju target.`}
+                {ach.reached ? '✓ Target tercapai - kamu bisa mengajukan surat & sertifikat.' : `${ach.target - ach.earned} poin lagi menuju target.`}
               </div>
             </div>
           )}

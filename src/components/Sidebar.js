@@ -4,42 +4,62 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/Icons';
 
-const NAV = [
-  ['/dashboard', 'Ringkasan', 'grid'],
-  ['/dashboard/anggota', 'Anggota', 'users'],
-  ['/dashboard/bulk', 'Bulk Register', 'upload'],
-  ['/dashboard/kegiatan', 'Kegiatan', 'calendar'],
-  ['/dashboard/tugas', 'Tugas', 'check'],
-  ['/dashboard/pengumuman', 'Pengumuman', 'list'],
-  ['/dashboard/izin', 'Izin', 'clock'],
-  ['/dashboard/rsvp', 'RSVP', 'users'],
-  ['/dashboard/galeri', 'Galeri', 'grid'],
-  ['/dashboard/komentar', 'Komentar', 'list'],
-  ['/dashboard/poin', 'Poin & Sertifikat', 'star'],
-  ['/dashboard/merch', 'Merch', 'gift'],
-  ['/dashboard/penukaran', 'Penukaran', 'swap'],
-  ['/dashboard/kas', 'Uang Kas', 'wallet'],
-  ['/dashboard/carousel', 'Carousel', 'grid'],
-  ['/dashboard/audit', 'Audit Log', 'clock'],
+// Navigasi admin dikelompokkan agar rapi.
+const GROUPS = [
+  [null, [
+    ['/dashboard', 'Ringkasan', 'grid'],
+  ]],
+  ['Anggota', [
+    ['/dashboard/anggota', 'Anggota', 'users'],
+    ['/dashboard/bulk', 'Bulk Register', 'upload'],
+  ]],
+  ['Kegiatan', [
+    ['/dashboard/kegiatan', 'Kegiatan', 'calendar'],
+    ['/dashboard/izin', 'Izin', 'clock'],
+    ['/dashboard/rsvp', 'RSVP', 'users'],
+  ]],
+  ['Tugas & Poin', [
+    ['/dashboard/tugas', 'Tugas', 'check'],
+    ['/dashboard/poin', 'Poin & Sertifikat', 'star'],
+    ['/dashboard/merch', 'Merch', 'gift'],
+    ['/dashboard/penukaran', 'Penukaran', 'swap'],
+  ]],
+  ['Komunitas', [
+    ['/dashboard/pengumuman', 'Pengumuman', 'list'],
+    ['/dashboard/galeri', 'Galeri', 'grid'],
+    ['/dashboard/komentar', 'Komentar', 'list'],
+  ]],
+  ['Keuangan', [
+    ['/dashboard/kas', 'Uang Kas', 'wallet'],
+  ]],
+  ['Sistem', [
+    ['/dashboard/carousel', 'Carousel', 'grid'],
+    ['/dashboard/pengaturan', 'Pengaturan', 'swap'],
+    ['/dashboard/audit', 'Audit Log', 'clock'],
+  ]],
 ];
 
 // Menu untuk anggota (hanya yang bisa mereka akses di aplikasi).
-const MEMBER_NAV = [
-  ['/dashboard', 'Ringkasan', 'grid'],
-  ['/dashboard/tugas-saya', 'Tugas', 'check'],
-  ['/dashboard/kegiatan-saya', 'Kegiatan', 'calendar'],
-  ['/dashboard/keaktifan', 'Keaktifan & Sertifikat', 'star'],
+const MEMBER_GROUPS = [
+  [null, [
+    ['/dashboard', 'Ringkasan', 'grid'],
+    ['/dashboard/tugas-saya', 'Tugas', 'check'],
+    ['/dashboard/kegiatan-saya', 'Kegiatan', 'calendar'],
+    ['/dashboard/keaktifan', 'Keaktifan & Sertifikat', 'star'],
+  ]],
 ];
 
 export default function Sidebar({ open, onClose, onLogout, canAdmin = true, isTreasurer = false }) {
   const path = usePathname();
-  let items;
+
+  let groups;
   if (canAdmin) {
-    items = NAV;
+    groups = GROUPS;
   } else {
-    items = [...MEMBER_NAV];
-    if (isTreasurer) items.push(['/dashboard/kas', 'Uang Kas', 'wallet']);
+    groups = JSON.parse(JSON.stringify(MEMBER_GROUPS));
+    if (isTreasurer) groups.push(['Keuangan', [['/dashboard/kas', 'Uang Kas', 'wallet']]]);
   }
+
   return (
     <>
       {/* overlay mobile */}
@@ -52,7 +72,7 @@ export default function Sidebar({ open, onClose, onLogout, canAdmin = true, isTr
                     flex flex-col transition-transform md:translate-x-0
                     ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-200/70">
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-200/70 shrink-0">
           <img src="/umalink-logo.png" alt="Umalink" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
           <div className="leading-tight">
             <div className="font-bold tracking-tight">Umalink</div>
@@ -60,31 +80,40 @@ export default function Sidebar({ open, onClose, onLogout, canAdmin = true, isTr
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {items.map(([href, label, ic]) => {
-            const active = path === href || (href !== '/dashboard' && path.startsWith(href + '/'));
-            const I = Icon[ic];
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={onClose}
-                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${active
-                    ? 'text-white shadow-md shadow-brand/30'
-                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'}`}
-                style={active ? { backgroundImage: 'linear-gradient(135deg,#5B5FEF,#4A4FE6)' } : undefined}
-              >
-                {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-white/70" />}
-                <I width={18} height={18} />
-                {label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+          {groups.map(([label, items], gi) => (
+            <div key={gi} className="space-y-1">
+              {label && (
+                <div className="px-3 pt-1 pb-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
+                  {label}
+                </div>
+              )}
+              {items.map(([href, text, ic]) => {
+                const active = path === href || (href !== '/dashboard' && path.startsWith(href + '/'));
+                const I = Icon[ic];
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={onClose}
+                    className={`group relative flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all
+                      ${active
+                        ? 'text-white shadow-md shadow-brand/30'
+                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'}`}
+                    style={active ? { backgroundImage: 'linear-gradient(135deg,#5B5FEF,#4A4FE6)' } : undefined}
+                  >
+                    {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-white/70" />}
+                    {I && <I width={18} height={18} />}
+                    {text}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <button onClick={onLogout}
-          className="m-3 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition">
+          className="m-3 shrink-0 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition">
           <Icon.logout width={18} height={18} />
           Keluar
         </button>

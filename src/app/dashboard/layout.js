@@ -22,6 +22,7 @@ const TITLES = {
   '/dashboard/poin': 'Poin & Sertifikat',
   '/dashboard/kas': 'Uang Kas',
   '/dashboard/carousel': 'Carousel & Berita',
+  '/dashboard/pengaturan': 'Pengaturan',
   '/dashboard/audit': 'Audit Log',
   '/dashboard/tugas-saya': 'Tugas Saya',
   '/dashboard/kegiatan-saya': 'Kegiatan',

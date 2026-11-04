@@ -28,7 +28,7 @@ export default function GaleriPage() {
                       className={`w-full text-left card p-3 transition ${active ? 'ring-2 ring-brand' : 'hover:bg-slate-50'}`}>
                       <div className="font-medium text-sm truncate">{a.title}</div>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-[12px] text-slate-400">{a.start_time ? fmtDate(a.start_time) : '—'}</span>
+                        <span className="text-[12px] text-slate-400">{a.start_time ? fmtDate(a.start_time) : '-'}</span>
                         <span className={`badge ${a.photo_count > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
                           {a.photo_count} foto
                         </span>

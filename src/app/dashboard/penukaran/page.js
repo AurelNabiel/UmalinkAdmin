@@ -74,7 +74,7 @@ export default function PenukaranPage() {
                       <button onClick={() => decide(r.id, false)} className="text-xs font-semibold text-red-600 hover:underline">Tolak</button>
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400">{r.note || '—'}</span>
+                    <span className="text-xs text-slate-400">{r.note || '-'}</span>
                   )}
                 </td>
               </tr>

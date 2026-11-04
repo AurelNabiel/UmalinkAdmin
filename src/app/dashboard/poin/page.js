@@ -147,7 +147,7 @@ function PoinAnggota({ members, target }) {
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: reached ? '#22C55E' : '#5B5FEF' }} />
                 </div>
               )}
-              {reached && <div className="text-xs text-green-600 mt-1">✓ Memenuhi target — bisa klaim sertifikat</div>}
+              {reached && <div className="text-xs text-green-600 mt-1">✓ Memenuhi target - bisa klaim sertifikat</div>}
             </div>
           );
         })}
@@ -205,7 +205,7 @@ function KlaimTab({ claims, org, templates, signatures, onDone }) {
                     <span className="text-xs text-slate-400 font-normal"> · {KIND[c.kind] || c.kind}</span>
                   </div>
                   <div className="text-xs text-slate-400 truncate">
-                    {c.nim || '—'}{c.division ? ` · ${divisionLabel(c.division)}` : ''} · <span className="text-brand font-semibold">{c.points_at_claim} poin</span> · {fmtDate(c.created_at)}
+                    {c.nim || '-'}{c.division ? ` · ${divisionLabel(c.division)}` : ''} · <span className="text-brand font-semibold">{c.points_at_claim} poin</span> · {fmtDate(c.created_at)}
                   </div>
                 </div>
                 <span className={`badge shrink-0 ${st.cls}`}>{st.label}</span>
@@ -284,11 +284,11 @@ const KOP_CSS = `.kop{display:flex;align-items:center;gap:16px;border-bottom:4px
     .kop .kt .a{font-size:9.5pt;color:#555;margin-top:2px}
     .kopline{height:1px;background:#1b3a6b;margin-top:2px;margin-bottom:22px}`;
 
-/* ---------- Surat Keterangan Keaktifan (A4 portrait) — acuan: dokumen UMADO ---------- */
+/* ---------- Surat Keterangan Keaktifan (A4 portrait) - acuan: dokumen UMADO ---------- */
 function suratHTML(c, org) {
-  const nama = esc(c.full_name || DOT);
+  const nama = esc(c.full_name || '[Nama Anda]');
   const nim = esc(c.nim || DOT);
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Surat Keterangan Keaktifan — ${nama}</title>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Surat Keterangan Keaktifan - ${nama}</title>
     <style>
       @page{size:A4 portrait;margin:0}
       *{box-sizing:border-box}
@@ -347,16 +347,16 @@ function suratHTML(c, org) {
     <script>window.onload=()=>setTimeout(()=>window.print(),250)</script></body></html>`;
 }
 
-/* ---------- Sertifikat Penghargaan (A4 landscape) — acuan: desain navy & gold ---------- */
+/* ---------- Sertifikat Penghargaan (A4 landscape) - acuan: desain navy & gold ---------- */
 function sertifikatHTML(c, org) {
-  const nama = esc(c.full_name || '-');
+  const nama = esc(c.full_name || '[Nama Anda]');
   const orgName = esc(org || 'UMADO');
   const initial = (c.full_name || org || 'U').trim().charAt(0).toUpperCase();
   const body = `Diberikan sebagai bentuk penghargaan atas partisipasi aktif dan kontribusi
     dalam kegiatan organisasi ${orgName} dengan total ${c.points_at_claim} poin keaktifan
     selama periode kepengurusan. Semoga dedikasi yang telah diberikan menjadi teladan dan
     terus memberikan manfaat bagi organisasi.`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Sertifikat — ${nama}</title>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Sertifikat - ${nama}</title>
     ${FONT_LINKS}
     <style>
       @page{size:A4 landscape;margin:0}
@@ -412,7 +412,7 @@ function sertifikatHTML(c, org) {
 }
 
 /* ============================================================
-   RENDER DOKUMEN — mode default | image | html, dengan tanda tangan
+   RENDER DOKUMEN - mode default | image | html, dengan tanda tangan
    ============================================================ */
 const CANVAS = { sertifikat: { w: 1123, h: 794 }, surat_keaktifan: { w: 794, h: 1123 } };
 
@@ -437,7 +437,7 @@ function defaultLayout(kind) {
 
 function docData(c, org) {
   return {
-    nama: c.full_name || '-', nim: c.nim || '', divisi: divisionLabel(c.division),
+    nama: c.full_name || '[Nama Anda]', nim: c.nim || '', divisi: divisionLabel(c.division),
     poin: String(c.points_at_claim ?? ''), tanggal: tgl(), org: org || 'UMADO',
   };
 }
@@ -447,7 +447,7 @@ function imageDocMarkup(kind, tpl, c, org, sig) {
   const { w, h } = CANVAS[kind] || CANVAS.sertifikat;
   const L = { ...defaultLayout(kind), ...(tpl.layout || {}) };
   const content = {
-    name: esc(c.full_name || '-'),
+    name: esc(c.full_name || '[Nama Anda]'),
     body: esc(kind === 'sertifikat' ? certBody(c, org) : ''),
     date: `Jakarta, ${esc(tgl())}`,
   };
@@ -530,7 +530,7 @@ function renderDoc(c, org, tpl, sig) {
    TAB: TEMPLATE & TANDA TANGAN
    ============================================================ */
 const KIND_LABEL = { surat_keaktifan: 'Surat Keaktifan', sertifikat: 'Sertifikat' };
-const SAMPLE_CLAIM = (kind) => ({ full_name: 'Aurelio Nabiel Rizqullah', nim: '2023110097', division: '', points_at_claim: 120, kind });
+const SAMPLE_CLAIM = (kind) => ({ full_name: 'Nama Anda', nim: 'NIM Anda', division: '', points_at_claim: 120, kind });
 const SAMPLE_SURAT_HTML = `{{kop}}
 <h2 style="text-align:center;text-transform:uppercase;text-decoration:underline;margin:0">Surat Keterangan Keaktifan Anggota</h2>
 <div style="text-align:center;margin:3px 0 20px">Nomor: ...../SK-UMADO/2026</div>
@@ -653,8 +653,8 @@ function TemplateEditor({ tpl, signatures, onDone }) {
       <div className="pt-3 border-t border-slate-100">
         <label className="text-sm font-medium">Tanda tangan untuk dokumen ini</label>
         <div className="mt-1 max-w-xs">
-          <Select value={sigId} onChange={setSigId} placeholder="— tanpa tanda tangan —"
-            options={[['', '— tanpa tanda tangan —'], ...signatures.map((s) => [s.id, `${s.label}${s.signer_name ? ` · ${s.signer_name}` : ''}`])]} />
+          <Select value={sigId} onChange={setSigId} placeholder="(tanpa tanda tangan)"
+            options={[['', '(tanpa tanda tangan)'], ...signatures.map((s) => [s.id, `${s.label}${s.signer_name ? ` · ${s.signer_name}` : ''}`])]} />
         </div>
       </div>
 

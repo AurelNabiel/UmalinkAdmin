@@ -106,7 +106,7 @@ export default function AnggotaPage() {
         .foot{margin-top:16px;color:#94a3b8;font-size:10px;display:flex;justify-content:space-between}
         @media print{body{padding:10px}}
       </style></head><body>
-      <div class="head"><div class="logo"></div><h1>Daftar Anggota — Umalink</h1></div>
+      <div class="head"><div class="logo"></div><h1>Daftar Anggota - Umalink</h1></div>
       <div class="sub">${filtered.length} anggota${info.length ? ' · ' + info.join(' · ') : ''}</div>
       <table>
         <thead><tr>
@@ -185,8 +185,8 @@ export default function AnggotaPage() {
                       <span className="font-medium">{m.full_name || '-'}</span>
                     </div>
                   </td>
-                  <td className="py-2 pr-3 text-slate-500">{m.email || '—'}</td>
-                  <td className="py-2 pr-3">{m.nim || '—'}</td>
+                  <td className="py-2 pr-3 text-slate-500">{m.email || '-'}</td>
+                  <td className="py-2 pr-3">{m.nim || '-'}</td>
                   <td className="py-2 pr-3"><Badge text={m.role} color={ROLE_COLOR[m.role]} /></td>
                   <td className="py-2 pr-3"><Badge text={divisionLabel(m.division)} color={DIV_COLOR[m.division || '']} /></td>
                   <td className="py-2"><button onClick={() => setEdit(m)} className="text-brand text-xs font-semibold hover:underline">Edit</button></td>

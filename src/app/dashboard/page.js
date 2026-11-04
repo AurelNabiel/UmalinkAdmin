@@ -135,7 +135,7 @@ function AdminRingkasan() {
                 <div className="w-11 h-11 rounded-xl bg-brand-light grid place-items-center shrink-0"><Icon.calendar width={20} height={20} color="#5B5FEF" /></div>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold truncate">{a.title}</div>
-                  <div className="text-xs text-slate-400 truncate">{divisionLabel(a.division)} · {a.description || '—'}</div>
+                  <div className="text-xs text-slate-400 truncate">{divisionLabel(a.division)} · {a.description || '-'}</div>
                 </div>
                 <span className="badge bg-slate-100 text-slate-500">{timeInfo(a).label}</span>
               </button>
@@ -158,7 +158,7 @@ function AdminRingkasan() {
                style={{ background: 'linear-gradient(135deg,#5B5FEF,#7C4DFF,#22D3EE)' }}>
             <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/15" />
             <div className="text-xs text-white/80 relative">Saldo Kas</div>
-            <div className="text-2xl font-extrabold relative mt-1">{cash ? fmtIDR(cash.saldo) : '—'}</div>
+            <div className="text-2xl font-extrabold relative mt-1">{cash ? fmtIDR(cash.saldo) : '-'}</div>
             {cash && (
               <div className="flex gap-2 mt-3 relative">
                 <div className="flex-1 rounded-lg bg-white/15 px-3 py-1.5">

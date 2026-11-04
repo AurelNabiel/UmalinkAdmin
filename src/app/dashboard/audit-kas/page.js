@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Spinner, ErrorBox } from '@/components/ui';
 import { fmtIDR, fmtDate } from '@/lib/constants';
 
-// Audit khusus keuangan/kas — terpisah dari audit kegiatan.
+// Audit khusus keuangan/kas - terpisah dari audit kegiatan.
 export default function AuditKasPage() {
   const [rows, setRows] = useState(null);
   const [err, setErr] = useState('');
