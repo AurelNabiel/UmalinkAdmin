@@ -13,24 +13,49 @@ const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov
 
 export default function KasPage() {
   const [tab, setTab] = useState('ringkasan');
+  const [me, setMe] = useState(null);
+  const [divs, setDivs] = useState([]);       // kode divisi yg bisa dikelola
+  const [division, setDivision] = useState('');
   const [ov, setOv] = useState(null);
   const [tx, setTx] = useState([]);
   const [periods, setPeriods] = useState([]);
   const [err, setErr] = useState('');
 
+  useEffect(() => {
+    (async () => {
+      const { data: s } = await supabase.auth.getUser();
+      const uid = s.user?.id;
+      if (!uid) return;
+      const [{ data: p }, { data: d }] = await Promise.all([
+        supabase.from('profiles').select('role').eq('id', uid).maybeSingle(),
+        supabase.rpc('my_cash_divisions'),
+      ]);
+      const isAdmin = ['admin', 'superadmin'].includes(p?.role);
+      const list = (d || []).map((r) => r.division);
+      setMe({ role: p?.role, canAdmin: isAdmin });
+      setDivs(list);
+      setDivision(list[0] || '');
+    })();
+  }, []);
+
   const loadAll = useCallback(async () => {
     const [o, t, p] = await Promise.all([
-      supabase.rpc('cash_overview'),
-      supabase.rpc('cash_list_transactions', { p_limit: 500 }),
-      supabase.rpc('cash_list_periods'),
+      supabase.rpc('cash_overview', { p_division: division }),
+      supabase.rpc('cash_list_transactions', { p_division: division, p_limit: 500 }),
+      supabase.rpc('cash_list_periods', { p_division: division }),
     ]);
     if (o.error) { setErr(o.error.message); return; }
+    setErr('');
     setOv((o.data && o.data[0]) || {});
     setTx(t.data || []);
     setPeriods(p.data || []);
-  }, []);
-  useEffect(() => { loadAll(); }, [loadAll]);
+  }, [division]);
+  useEffect(() => { if (me && division) loadAll(); }, [loadAll, me, division]);
 
+  if (!me) return <Spinner />;
+  if (divs.length === 0) {
+    return <ErrorBox>Kamu belum ditetapkan sebagai bendahara divisi mana pun. Hubungi admin.</ErrorBox>;
+  }
   if (err) return <ErrorBox>{err}</ErrorBox>;
   if (!ov) return <Spinner />;
 
@@ -45,6 +70,8 @@ export default function KasPage() {
 
   return (
     <div className="space-y-6">
+      <SummaryStrip onPick={setDivision} />
+      <DivisionBar divs={divs} division={division} onChange={setDivision} />
       {/* Hero saldo + mini */}
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="rounded-2xl p-6 text-white shadow-soft relative overflow-hidden lg:col-span-1"
@@ -75,11 +102,63 @@ export default function KasPage() {
       </div>
 
       {tab === 'ringkasan' && <RingkasanTab ov={ov} tx={tx} periods={periods} onGo={setTab} />}
-      {tab === 'iuran' && <IuranTab onChanged={loadAll} />}
-      {tab === 'transaksi' && <TransaksiTab tx={tx} onChanged={loadAll} />}
-      {tab === 'laporan' && <LaporanTab tx={tx} />}
+      {tab === 'iuran' && <IuranTab division={division} onChanged={loadAll} />}
+      {tab === 'transaksi' && <TransaksiTab division={division} tx={tx} onChanged={loadAll} />}
+      {tab === 'laporan' && <LaporanTab division={division} tx={tx} />}
       {tab === 'audit' && <AuditTab />}
-      {tab === 'pengaturan' && <PengaturanTab />}
+      {tab === 'pengaturan' && <PengaturanTab canAdmin={me.canAdmin} />}
+    </div>
+  );
+}
+
+/* Pemilih divisi kas — hanya divisi yang bisa dikelola pemanggil. */
+function DivisionBar({ divs, division, onChange }) {
+  if (divs.length <= 1) {
+    return (
+      <div className="card px-4 py-2.5 flex items-center gap-2 text-sm">
+        <Icon.wallet width={16} height={16} />
+        <span className="text-slate-500">Kas divisi:</span>
+        <span className="font-semibold text-brand">{divisionLabel(division)}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="card px-4 py-2.5 flex items-center gap-3 text-sm">
+      <Icon.wallet width={16} height={16} />
+      <span className="text-slate-500">Kelola kas divisi:</span>
+      <select className="input py-1.5 w-auto" value={division} onChange={(e) => onChange(e.target.value)}>
+        {divs.map((v) => <option key={v} value={v}>{divisionLabel(v)}</option>)}
+      </select>
+    </div>
+  );
+}
+
+/* Ringkasan saldo seluruh divisi (pengganti kas "Umum"). */
+function SummaryStrip({ onPick }) {
+  const [rows, setRows] = useState(null);
+  useEffect(() => {
+    supabase.rpc('cash_division_summary').then(({ data }) => setRows(data || []));
+  }, []);
+  if (!rows || rows.length <= 1) return null; // hanya tampil kalau >1 divisi
+  const grand = rows.reduce((a, r) => a + Number(r.saldo || 0), 0);
+  return (
+    <div className="card p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold">Ringkasan Kas Semua Divisi</h3>
+        <span className="text-sm">Total: <b className="text-brand">{fmtIDR(grand)}</b></span>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {rows.map((r) => (
+          <button key={r.division} onClick={() => onPick(r.division)}
+            className="text-left rounded-xl border border-slate-100 p-3 hover:bg-slate-50 transition">
+            <div className="text-sm font-semibold">{divisionLabel(r.division)}</div>
+            <div className="text-lg font-extrabold mt-0.5">{fmtIDR(r.saldo)}</div>
+            <div className="text-xs text-slate-400 mt-0.5">
+              Belum tertagih {fmtIDR(r.tagihan_belum)} · {r.anggota_nunggak} anggota
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -191,7 +270,7 @@ function QuickBtn({ label, onClick, color }) {
 }
 
 /* ====================== IURAN ====================== */
-function IuranTab({ onChanged }) {
+function IuranTab({ division, onChanged }) {
   const [periods, setPeriods] = useState(null);
   const [sel, setSel] = useState(null);
   const [bills, setBills] = useState(null);
@@ -202,9 +281,9 @@ function IuranTab({ onChanged }) {
   const [q, setQ] = useState('');
 
   const loadPeriods = useCallback(async () => {
-    const { data } = await supabase.rpc('cash_list_periods');
+    const { data } = await supabase.rpc('cash_list_periods', { p_division: division });
     setPeriods(data || []);
-  }, []);
+  }, [division]);
   useEffect(() => {
     loadPeriods();
     supabase.rpc('cash_get_settings').then(({ data }) => { if (data && data[0]) setDef(data[0].default_dues); });
@@ -219,7 +298,7 @@ function IuranTab({ onChanged }) {
     if (!title.trim()) { alert('Isi judul periode (mis. "Minggu 1 Okt")'); return; }
     setBusy(true);
     const { error } = await supabase.rpc('cash_create_period', {
-      p_title: title.trim(), p_amount: amount === '' ? null : parseInt(amount, 10),
+      p_title: title.trim(), p_amount: amount === '' ? null : parseInt(amount, 10), p_division: division,
     });
     setBusy(false);
     if (error) { alert('Gagal: ' + error.message); return; }
@@ -355,13 +434,13 @@ function BillCard({ b, onDone }) {
 }
 
 /* ====================== TRANSAKSI ====================== */
-function TransaksiTab({ tx, onChanged }) {
+function TransaksiTab({ division, tx, onChanged }) {
   const [f, setF] = useState({ type: 'keluar', amount: '', category: '', note: '', proof: '' });
   async function add() {
     const amt = parseInt(f.amount, 10);
     if (!amt || amt <= 0) { alert('Nominal harus > 0'); return; }
     const { error } = await supabase.rpc('cash_add_transaction', {
-      p_type: f.type, p_amount: amt, p_category: f.category || null, p_note: f.note || null, p_proof_url: f.proof || null,
+      p_type: f.type, p_amount: amt, p_category: f.category || null, p_note: f.note || null, p_proof_url: f.proof || null, p_division: division,
     });
     if (error) { alert('Gagal: ' + error.message); return; }
     setF({ type: 'keluar', amount: '', category: '', note: '', proof: '' }); onChanged();
@@ -420,7 +499,7 @@ function TransaksiTab({ tx, onChanged }) {
 }
 
 /* ====================== LAPORAN ====================== */
-function LaporanTab({ tx }) {
+function LaporanTab({ division, tx }) {
   const now = new Date();
   const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
   const [rep, setRep] = useState(null);
@@ -433,9 +512,9 @@ function LaporanTab({ tx }) {
     [tx, month]); // eslint-disable-line
 
   useEffect(() => {
-    supabase.rpc('cash_report', { p_from: from.toISOString(), p_to: to.toISOString() })
+    supabase.rpc('cash_report', { p_from: from.toISOString(), p_to: to.toISOString(), p_division: division })
       .then(({ data }) => setRep((data && data[0]) || null));
-  }, [month]); // eslint-disable-line
+  }, [month, division]); // eslint-disable-line
 
   const label = `${MONTHS[m - 1]} ${y}`;
 
@@ -585,7 +664,7 @@ function AuditTab() {
 }
 
 /* ====================== PENGATURAN ====================== */
-function PengaturanTab() {
+function PengaturanTab({ canAdmin }) {
   const [def, setDef] = useState(5000);
   const [targetDues, setTargetDues] = useState(0);
   const [disabled, setDisabled] = useState([]);
@@ -593,7 +672,7 @@ function PengaturanTab() {
   const [members, setMembers] = useState(null);
   useEffect(() => {
     supabase.rpc('cash_get_settings').then(({ data }) => { if (data && data[0]) { setDef(data[0].default_dues); setDisabled(data[0].disabled_divisions || []); setTargetDues(data[0].dues_target || 0); } });
-    supabase.from('profiles').select('id, full_name, is_treasurer').order('full_name').then(({ data }) => setMembers(data || []));
+    supabase.from('profiles').select('id, full_name, treasurer_divisions').order('full_name').then(({ data }) => setMembers(data || []));
   }, []);
   function toggleDiv(v) { setDisabled((d) => (d.includes(v) ? d.filter((x) => x !== v) : [...d, v])); }
   async function save() {
@@ -601,10 +680,12 @@ function PengaturanTab() {
     if (error) { alert('Gagal: ' + error.message); return; }
     setSaved(true); setTimeout(() => setSaved(false), 1500);
   }
-  async function toggleTreasurer(id, flag) {
-    const { error } = await supabase.rpc('set_treasurer', { p_user_id: id, p_flag: flag });
+  async function toggleDivForMember(m, code, on) {
+    const cur = m.treasurer_divisions || [];
+    const next = on ? [...new Set([...cur, code])] : cur.filter((x) => x !== code);
+    const { error } = await supabase.rpc('set_treasurer', { p_user_id: m.id, p_divisions: next });
     if (error) { alert('Gagal: ' + error.message + ' (hanya admin)'); return; }
-    setMembers((mm) => mm.map((x) => (x.id === id ? { ...x, is_treasurer: flag } : x)));
+    setMembers((mm) => mm.map((x) => (x.id === m.id ? { ...x, treasurer_divisions: next } : x)));
   }
   return (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -628,16 +709,28 @@ function PengaturanTab() {
         {saved && <span className="text-sm text-green-700 ml-3">Tersimpan.</span>}
       </div>
       <div className="card p-5">
-        <h3 className="font-semibold mb-1">Bendahara</h3>
-        <p className="text-xs text-slate-400 mb-4">Beri akses kelola kas (hanya admin yang bisa mengubah).</p>
+        <h3 className="font-semibold mb-1">Bendahara per Divisi</h3>
+        <p className="text-xs text-slate-400 mb-4">Centang divisi yang dikelola tiap bendahara (bisa lebih dari satu). Bendahara hanya mengelola kas divisi yang dicentang. {canAdmin ? '' : '(Hanya admin yang bisa mengubah.)'}</p>
         {!members ? <Spinner /> : (
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-            {members.map((m) => (
-              <label key={m.id} className="flex items-center justify-between py-2 text-sm">
-                <span>{m.full_name || '-'}</span>
-                <input type="checkbox" checked={!!m.is_treasurer} onChange={(e) => toggleTreasurer(m.id, e.target.checked)} />
-              </label>
-            ))}
+          <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+            {members.map((m) => {
+              const cur = m.treasurer_divisions || [];
+              return (
+                <div key={m.id} className="py-2.5 text-sm">
+                  <div className="font-medium truncate mb-1.5">{m.full_name || '-'}</div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {DIVISIONS.filter(([v]) => v !== '').map(([v, l]) => (
+                      <label key={v} className="flex items-center gap-1.5 text-xs text-slate-600">
+                        <input type="checkbox" disabled={!canAdmin}
+                          checked={cur.includes(v)}
+                          onChange={(e) => toggleDivForMember(m, v, e.target.checked)} />
+                        {l}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
