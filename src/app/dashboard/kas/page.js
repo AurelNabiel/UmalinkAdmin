@@ -106,7 +106,7 @@ export default function KasPage() {
       {tab === 'transaksi' && <TransaksiTab division={division} tx={tx} onChanged={loadAll} />}
       {tab === 'laporan' && <LaporanTab division={division} tx={tx} />}
       {tab === 'audit' && <AuditTab />}
-      {tab === 'pengaturan' && <PengaturanTab canAdmin={me.canAdmin} />}
+      {tab === 'pengaturan' && <PengaturanTab canAdmin={me.canAdmin} division={division} />}
     </div>
   );
 }
@@ -286,8 +286,10 @@ function IuranTab({ division, onChanged }) {
   }, [division]);
   useEffect(() => {
     loadPeriods();
-    supabase.rpc('cash_get_settings').then(({ data }) => { if (data && data[0]) setDef(data[0].default_dues); });
-  }, [loadPeriods]);
+    supabase.rpc('cash_settings_get', { p_division: division }).then(({ data }) => {
+      if (data && data[0]) setDef(data[0].default_dues);
+    });
+  }, [loadPeriods, division]);
 
   async function loadBills(pid) {
     setSel(pid); setBills(null);
@@ -664,19 +666,25 @@ function AuditTab() {
 }
 
 /* ====================== PENGATURAN ====================== */
-function PengaturanTab({ canAdmin }) {
+function PengaturanTab({ canAdmin, division }) {
   const [def, setDef] = useState(5000);
   const [targetDues, setTargetDues] = useState(0);
-  const [disabled, setDisabled] = useState([]);
   const [saved, setSaved] = useState(false);
   const [members, setMembers] = useState(null);
   useEffect(() => {
-    supabase.rpc('cash_get_settings').then(({ data }) => { if (data && data[0]) { setDef(data[0].default_dues); setDisabled(data[0].disabled_divisions || []); setTargetDues(data[0].dues_target || 0); } });
+    supabase.rpc('cash_settings_get', { p_division: division }).then(({ data }) => {
+      if (data && data[0]) { setDef(data[0].default_dues); setTargetDues(data[0].dues_target || 0); }
+    });
+  }, [division]);
+  useEffect(() => {
     supabase.from('profiles').select('id, full_name, treasurer_divisions').order('full_name').then(({ data }) => setMembers(data || []));
   }, []);
-  function toggleDiv(v) { setDisabled((d) => (d.includes(v) ? d.filter((x) => x !== v) : [...d, v])); }
   async function save() {
-    const { error } = await supabase.rpc('cash_set_settings', { p_default_dues: parseInt(def, 10) || 0, p_disabled_divisions: disabled, p_dues_target: parseInt(targetDues, 10) || 0 });
+    const { error } = await supabase.rpc('cash_settings_set', {
+      p_division: division,
+      p_default_dues: parseInt(def, 10) || 0,
+      p_dues_target: parseInt(targetDues, 10) || 0,
+    });
     if (error) { alert('Gagal: ' + error.message); return; }
     setSaved(true); setTimeout(() => setSaved(false), 1500);
   }
@@ -690,22 +698,15 @@ function PengaturanTab({ canAdmin }) {
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       <div className="card p-5">
-        <h3 className="font-semibold mb-4">Pengaturan Iuran</h3>
-        <label className="text-sm font-medium">Target kas per anggota (Rp)</label>
-        <input type="number" min="0" className="input mt-1 mb-1" value={targetDues} onChange={(e) => setTargetDues(e.target.value)} />
-        <p className="text-xs text-slate-400 mb-4">Anggota yang total pembayarannya sudah mencapai target tidak akan ditagih lagi. (0 = tanpa batas)</p>
+        <h3 className="font-semibold mb-1">Pengaturan Iuran · {divisionLabel(division)}</h3>
+        <p className="text-xs text-slate-400 mb-4">Pengaturan ini khusus untuk divisi terpilih. Ganti divisi di atas untuk mengatur yang lain.</p>
         <label className="text-sm font-medium">Iuran default per periode (Rp)</label>
-        <input type="number" min="0" className="input mt-1 mb-4" value={def} onChange={(e) => setDef(e.target.value)} />
-        <label className="text-sm font-medium">Nonaktifkan iuran untuk divisi</label>
-        <div className="mt-2 space-y-2">
-          {DIVISIONS.filter(([v]) => v !== '').map(([v, l]) => (
-            <label key={v} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={disabled.includes(v)} onChange={() => toggleDiv(v)} />
-              {l} {disabled.includes(v) && <span className="text-xs text-red-500">(tidak ditagih)</span>}
-            </label>
-          ))}
-        </div>
-        <button onClick={save} className="btn-brand mt-5">Simpan Pengaturan</button>
+        <input type="number" min="0" className="input mt-1 mb-1" value={def} onChange={(e) => setDef(e.target.value)} />
+        <p className="text-xs text-slate-400 mb-4">Dipakai saat buat tagihan tanpa isi nominal.</p>
+        <label className="text-sm font-medium">Batas tagihan per anggota (Rp)</label>
+        <input type="number" min="0" className="input mt-1 mb-1" value={targetDues} onChange={(e) => setTargetDues(e.target.value)} />
+        <p className="text-xs text-slate-400 mb-4">Anggota yang total pembayarannya sudah mencapai batas tidak ditagih lagi. (0 = tanpa batas)</p>
+        <button onClick={save} className="btn-brand mt-1">Simpan Pengaturan</button>
         {saved && <span className="text-sm text-green-700 ml-3">Tersimpan.</span>}
       </div>
       <div className="card p-5">
